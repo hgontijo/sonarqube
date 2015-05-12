@@ -40,7 +40,7 @@ import org.sonar.server.ws.WsTester;
 public class HistoryWsActionMediumTest {
 
   @ClassRule
-  public static ServerTester tester = new ServerTester();
+  public static ServerTester tester = new ServerTester().withStartupTasks();
   @Rule
   public UserSessionRule userSessionRule = UserSessionRule.forServerTester(tester);
 

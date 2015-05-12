@@ -21,6 +21,14 @@ package org.sonar.server.tester;
 
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
+import java.io.File;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import javax.annotation.Nullable;
+import javax.servlet.ServletContext;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.junit.rules.ExternalResource;
@@ -32,17 +40,9 @@ import org.sonar.process.ProcessProperties;
 import org.sonar.server.es.EsServerHolder;
 import org.sonar.server.platform.BackendCleanup;
 import org.sonar.server.platform.Platform;
+import org.sonar.server.platform.ServerTesterPlatform;
 import org.sonar.server.ws.WsTester;
 import org.sonar.test.TestUtils;
-
-import javax.annotation.Nullable;
-import javax.servlet.ServletContext;
-import java.io.File;
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
 
 /**
  * Entry point to implement medium tests of server components.
@@ -57,12 +57,18 @@ public class ServerTester extends ExternalResource {
   private static final Logger LOG = Loggers.get(ServerTester.class);
   private static final String PROP_PREFIX = "mediumTests.";
 
-  private Platform platform;
+  private ServerTesterPlatform platform;
   private EsServerHolder esServerHolder;
   private final File homeDir = TestUtils.newTempDir("tmp-sq-");
-  private final List components = Lists.newArrayList(WsTester.class);
+  private final List<Object> components = Lists.<Object>newArrayList(WsTester.class);
   private final Properties initialProps = new Properties();
   private final ServletContext servletContext = new AttributeHolderServletContext();
+  private boolean startupTasks = false;
+
+  public ServerTester withStartupTasks() {
+    this.startupTasks = true;
+    return this;
+  }
 
   /**
    * Called only when JUnit @Rule or @ClassRule is used.
@@ -96,10 +102,10 @@ public class ServerTester extends ExternalResource {
           properties.put(StringUtils.substringAfter(key, PROP_PREFIX), entry.getValue());
         }
       }
-      platform = new Platform();
+      platform = new ServerTesterPlatform();
       platform.init(properties, servletContext);
       platform.addComponents(components);
-      platform.doStart();
+      platform.doStart(startupTasks ? Platform.Startup.ALL : Platform.Startup.NO_STARTUP_TASKS);
     } catch (Exception e) {
       stop();
       Throwables.propagate(e);
