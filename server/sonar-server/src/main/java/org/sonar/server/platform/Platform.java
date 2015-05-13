@@ -19,9 +19,12 @@
  */
 package org.sonar.server.platform;
 
+import com.google.common.collect.Lists;
+import java.util.List;
 import org.sonar.api.platform.Server;
 import org.sonar.api.utils.log.Logger;
 import org.sonar.api.utils.log.Loggers;
+import org.sonar.api.utils.log.Profiler;
 import org.sonar.core.persistence.DatabaseVersion;
 import org.sonar.core.platform.ComponentContainer;
 
@@ -30,6 +33,13 @@ import javax.servlet.ServletContext;
 
 import java.util.Collection;
 import java.util.Properties;
+import org.sonar.server.platform.components.ComponentLevel;
+import org.sonar.server.platform.components.ComponentLevel1;
+import org.sonar.server.platform.components.ComponentLevel2;
+import org.sonar.server.platform.components.ComponentLevel3;
+import org.sonar.server.platform.components.ComponentLevel4;
+import org.sonar.server.platform.components.ComponentLevelStartup;
+import org.sonar.server.platform.components.ComponentLevelSafeMode;
 
 /**
  * @since 2.2
@@ -40,11 +50,14 @@ public class Platform {
 
   private static final Platform INSTANCE = new Platform();
 
-  private ServerComponents serverComponents;
-  private ComponentContainer level1Container, level2Container, safeModeContainer, level3Container, level4Container;
-  private ComponentContainer currentContainer;
+  private Properties properties;
+  private ServletContext servletContext;
+  private ComponentLevel level1, level2, levelSafeMode, level3, level4;
+  private ComponentLevel currentLevel;
   private boolean dbConnected = false;
   private boolean started = false;
+  private final List<Object> level4AddedComponents = Lists.newArrayList();
+  private final Profiler profiler = Profiler.createIfTrace(Loggers.get(Platform.class));
 
   public Platform() {
   }
@@ -72,11 +85,12 @@ public class Platform {
   }
 
   public void init(Properties properties, ServletContext servletContext) {
-    serverComponents = new ServerComponents(this, properties, servletContext);
+    this.properties = properties;
+    this.servletContext = servletContext;
     if (!dbConnected) {
       startLevel1Container();
       startLevel2Container();
-      currentContainer = level2Container;
+      currentLevel = level2;
       dbConnected = true;
     }
   }
@@ -90,13 +104,13 @@ public class Platform {
     if (requireSafeMode()) {
       LOGGER.info("DB needs migration, entering safe mode");
       startSafeModeContainer();
-      currentContainer = safeModeContainer;
+      currentLevel = levelSafeMode;
       started = true;
     } else {
       startLevel34Containers();
       executeStartupTasks();
       // switch current container last to avoid giving access to a partially initialized container
-      currentContainer = level4Container;
+      currentLevel = level4;
       started = true;
 
       // stop safemode container if it existed
@@ -105,8 +119,8 @@ public class Platform {
   }
 
   public void restart() {
-    // switch currentContainer on level1 now to avoid exposing a container in the process of stopping
-    currentContainer = level1Container;
+    // switch currentLevel on level1 now to avoid exposing a container in the process of stopping
+    currentLevel = level1;
 
     // stop containers
     stopSafeModeContainer();
@@ -116,7 +130,7 @@ public class Platform {
     startLevel2Container();
     startLevel34Containers();
     executeStartupTasks();
-    currentContainer = level4Container;
+    currentLevel = level4;
   }
 
   private boolean requireSafeMode() {
@@ -135,10 +149,10 @@ public class Platform {
     if (!started) {
       return Status.BOOTING;
     }
-    if (safeModeContainer != null && currentContainer == safeModeContainer) {
+    if (levelSafeMode != null && currentLevel == levelSafeMode) {
       return Status.SAFEMODE;
     }
-    if (currentContainer == level4Container) {
+    if (currentLevel == level4) {
       return Status.UP;
     }
     return Status.BOOTING;
@@ -148,49 +162,54 @@ public class Platform {
    * Starts level 1
    */
   private void startLevel1Container() {
-    level1Container = new ComponentContainer();
-    level1Container.addSingletons(serverComponents.level1Components());
-    level1Container.startComponents();
+    level1 = start(new ComponentLevel1(this, properties, servletContext));
   }
 
   /**
    * Starts level 2
    */
   private void startLevel2Container() {
-    level2Container = level1Container.createChild();
-    level2Container.addSingletons(serverComponents.level2Components());
-    level2Container.startComponents();
+    level2 = start(new ComponentLevel2(level1));
   }
 
   /**
    * Starts level 3 and 4
    */
   private void startLevel34Containers() {
-    level3Container = level2Container.createChild();
-    level3Container.addSingletons(serverComponents.level3Components());
-    level3Container.startComponents();
-
-    level4Container = level3Container.createChild();
-    serverComponents.startLevel4Components(level4Container);
+    level3 = start(new ComponentLevel3(level2));
+    level4 = start(new ComponentLevel4(level3, level4AddedComponents));
   }
 
   public void executeStartupTasks() {
-    serverComponents.executeStartupTasks(level4Container);
+    new ComponentLevelStartup(level4)
+        .configure()
+        .start()
+        .stop()
+        .destroy();
   }
 
   private void startSafeModeContainer() {
-    safeModeContainer = level2Container.createChild();
-    safeModeContainer.addSingletons(serverComponents.safeModeComponents());
-    safeModeContainer.startComponents();
+    levelSafeMode = start(new ComponentLevelSafeMode(level2));
+  }
+
+  private ComponentLevel start(ComponentLevel componentLevel) {
+    profiler.start();
+    componentLevel.configure();
+    profiler.stopTrace(String.format("%s configured", componentLevel.getName()));
+    profiler.start();
+    componentLevel.start();
+    profiler.stopTrace(String.format("%s started", componentLevel.getName()));
+
+    return componentLevel;
   }
 
   /**
    * Stops level 1
    */
   private void stopLevel1Container() {
-    if (level1Container != null) {
-      level1Container.stopComponents();
-      level1Container = null;
+    if (level1 != null) {
+      level1.stop();
+      level1 = null;
     }
   }
 
@@ -201,11 +220,11 @@ public class Platform {
    * {@link ComponentContainer#stopComponents()}).
    */
   private void stopLevel234Containers() {
-    if (level2Container != null) {
-      level2Container.stopComponents();
-      level2Container = null;
-      level3Container = null;
-      level4Container = null;
+    if (level2 != null) {
+      level2.stop();
+      level2 = null;
+      level3 = null;
+      level4 = null;
     }
   }
 
@@ -216,9 +235,9 @@ public class Platform {
    * see {@link ComponentContainer#stopComponents()}).
    */
   private void stopSafeModeContainer() {
-    if (safeModeContainer != null) {
-      safeModeContainer.stopComponents();
-      safeModeContainer = null;
+    if (levelSafeMode != null) {
+      levelSafeMode.stop();
+      levelSafeMode = null;
     }
   }
 
@@ -233,7 +252,7 @@ public class Platform {
       stopSafeModeContainer();
       stopLevel234Containers();
       stopLevel1Container();
-      currentContainer = null;
+      currentLevel = null;
       dbConnected = false;
       started = false;
     } catch (Exception e) {
@@ -241,12 +260,12 @@ public class Platform {
     }
   }
 
-  public void addComponents(Collection components) {
-    serverComponents.addComponents(components);
+  public void addComponents(Collection<?> components) {
+    level4AddedComponents.addAll(components);
   }
 
   public ComponentContainer getContainer() {
-    return currentContainer;
+    return currentLevel.getContainer();
   }
 
   public Object getComponent(Object key) {
@@ -254,6 +273,6 @@ public class Platform {
   }
 
   public enum Status {
-    BOOTING, SAFEMODE, UP;
+    BOOTING, SAFEMODE, UP
   }
 }
