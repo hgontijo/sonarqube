@@ -47,7 +47,6 @@ import org.sonar.server.db.DbClient;
 import org.sonar.server.db.EmbeddedDatabaseFactory;
 import org.sonar.server.db.migrations.MigrationSteps;
 import org.sonar.server.design.db.FileDependencyDao;
-import org.sonar.server.es.EsClient;
 import org.sonar.server.event.db.EventDao;
 import org.sonar.server.issue.db.IssueDao;
 import org.sonar.server.issue.index.IssueIndex;
@@ -66,9 +65,8 @@ import org.sonar.server.ruby.PlatformRackBridge;
 import org.sonar.server.rule.db.RuleDao;
 import org.sonar.server.rule.index.RuleIndex;
 import org.sonar.server.rule.index.RuleNormalizer;
-import org.sonar.server.search.IndexClient;
+import org.sonar.server.search.EsSearchModule;
 import org.sonar.server.search.IndexQueue;
-import org.sonar.server.search.SearchClient;
 import org.sonar.server.source.db.FileSourceDao;
 import org.sonar.server.user.ThreadLocalUserSession;
 import org.sonar.server.user.db.GroupDao;
@@ -121,9 +119,7 @@ public class ComponentLevel1 extends ComponentLevel {
       DbClient.class,
 
       // Elasticsearch
-      SearchClient.class,
-      IndexClient.class,
-      EsClient.class,
+      EsSearchModule.class,
 
       // users
       GroupDao.class,
