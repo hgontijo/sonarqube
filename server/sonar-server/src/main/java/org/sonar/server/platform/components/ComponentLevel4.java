@@ -20,6 +20,7 @@
 package org.sonar.server.platform.components;
 
 import java.util.List;
+
 import org.sonar.api.config.EmailSettings;
 import org.sonar.api.issue.action.Actions;
 import org.sonar.api.profiles.AnnotationProfileParser;
@@ -60,13 +61,7 @@ import org.sonar.server.activity.index.ActivityIndexer;
 import org.sonar.server.activity.ws.ActivitiesWebService;
 import org.sonar.server.activity.ws.ActivityMapping;
 import org.sonar.server.authentication.ws.AuthenticationWs;
-import org.sonar.server.batch.BatchIndex;
-import org.sonar.server.batch.BatchWs;
-import org.sonar.server.batch.GlobalRepositoryAction;
-import org.sonar.server.batch.IssuesAction;
-import org.sonar.server.batch.ProjectRepositoryAction;
-import org.sonar.server.batch.ProjectRepositoryLoader;
-import org.sonar.server.batch.UsersAction;
+import org.sonar.server.batch.BatchWsModule;
 import org.sonar.server.charts.ChartFactory;
 import org.sonar.server.component.ComponentCleanerService;
 import org.sonar.server.component.ComponentService;
@@ -84,7 +79,6 @@ import org.sonar.server.computation.ws.ComputationWebService;
 import org.sonar.server.computation.ws.HistoryWsAction;
 import org.sonar.server.computation.ws.IsQueueEmptyWebService;
 import org.sonar.server.computation.ws.QueueWsAction;
-import org.sonar.server.computation.ws.SubmitReportWsAction;
 import org.sonar.server.config.ws.PropertiesWs;
 import org.sonar.server.dashboard.ws.DashboardsShowAction;
 import org.sonar.server.dashboard.ws.DashboardsWebService;
@@ -346,14 +340,7 @@ public class ComponentLevel4 extends ComponentLevel {
       ActivityIndex.class,
 
       // batch
-      BatchIndex.class,
-      GlobalRepositoryAction.class,
-      ProjectRepositoryAction.class,
-      ProjectRepositoryLoader.class,
-      SubmitReportWsAction.class,
-      IssuesAction.class,
-      UsersAction.class,
-      BatchWs.class,
+      BatchWsModule.class,
 
       // Dashboard
       DashboardsWebService.class,
