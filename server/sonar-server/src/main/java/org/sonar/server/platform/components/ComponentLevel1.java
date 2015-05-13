@@ -89,7 +89,7 @@ public class ComponentLevel1 extends ComponentLevel {
   }
 
   @Override
-  public ComponentLevel configure() {
+  protected void configureLevel() {
     add(platform, properties);
     addExtraRootComponents();
     add(
@@ -166,8 +166,6 @@ public class ComponentLevel1 extends ComponentLevel {
     addAll(CorePropertyDefinitions.all());
     addAll(MigrationSteps.CLASSES);
     addAll(DaoUtils.getDaoClasses());
-
-    return this;
   }
 
   private void addExtraRootComponents() {

@@ -34,7 +34,7 @@ public class ComponentLevel3 extends ComponentLevel {
   }
 
   @Override
-  public ComponentLevel configure() {
+  protected void configureLevel() {
     add(
       PersistentSettings.class,
       DefaultDatabaseConnector.class,
@@ -44,6 +44,5 @@ public class ComponentLevel3 extends ComponentLevel {
       DefaultHttpDownloader.class,
       UriReader.class,
       ServerIdGenerator.class);
-    return this;
   }
 }

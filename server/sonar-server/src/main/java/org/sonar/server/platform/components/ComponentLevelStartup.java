@@ -48,7 +48,7 @@ public class ComponentLevelStartup extends ComponentLevel {
   }
 
   @Override
-  public ComponentLevel configure() {
+  protected void configureLevel() {
     add(
       IndexSynchronizer.class,
       RegisterMetrics.class,
@@ -68,8 +68,6 @@ public class ComponentLevelStartup extends ComponentLevel {
       ReportQueueCleaner.class,
       RegisterIssueFilters.class,
       RenameIssueWidgets.class);
-
-    return this;
   }
 
   @Override

@@ -33,7 +33,7 @@ public class ComponentLevelSafeMode extends ComponentLevel {
   }
 
   @Override
-  public ComponentLevel configure() {
+  protected void configureLevel() {
     add(
       // DB access required by DatabaseSessionFilter wired into ROR
       DefaultDatabaseConnector.class,
@@ -49,7 +49,5 @@ public class ComponentLevelSafeMode extends ComponentLevel {
 
       // WS engine
       WebServiceEngine.class);
-
-    return this;
   }
 }

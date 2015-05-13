@@ -41,7 +41,7 @@ public class ComponentLevel2 extends ComponentLevel {
   }
 
   @Override
-  public ComponentLevel configure() {
+  protected void configureLevel() {
     add(
       DefaultServerUpgradeStatus.class,
       DatabaseMigrator.class,
@@ -66,6 +66,5 @@ public class ComponentLevel2 extends ComponentLevel {
       // DB migration
       PlatformDatabaseMigrationExecutorServiceImpl.class,
       PlatformDatabaseMigration.class);
-    return this;
   }
 }

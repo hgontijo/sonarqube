@@ -20,6 +20,7 @@
 package org.sonar.server.platform.components;
 
 import java.util.Collection;
+import java.util.List;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import org.sonar.core.platform.ComponentContainer;
@@ -62,7 +63,18 @@ public abstract class ComponentLevel {
     return parent.createChild();
   }
 
-  public abstract ComponentLevel configure();
+  public ComponentLevel configure() {
+    configureLevel();
+
+    List<Module> modules = container.getComponentsByType(Module.class);
+    for (Module module : modules) {
+      module.configure(container);
+    }
+
+    return this;
+  }
+
+  protected abstract void configureLevel();
 
   /**
    * Intended to be override by subclasses if needed

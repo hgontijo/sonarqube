@@ -324,7 +324,7 @@ public class ComponentLevel4 extends ComponentLevel {
   }
 
   @Override
-  public ComponentLevel configure() {
+  protected void configureLevel() {
     add(
       PluginDownloader.class,
       ChartFactory.class,
@@ -719,8 +719,6 @@ public class ComponentLevel4 extends ComponentLevel {
       NavigationWs.class);
 
     addAll(level4AddedComponents);
-
-    return this;
   }
 
   @Override
