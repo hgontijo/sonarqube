@@ -101,41 +101,6 @@
         </executions>
       </plugin>
       <plugin>
-        <groupId>com.github.eirslett</groupId>
-        <artifactId>frontend-maven-plugin</artifactId>
-        <executions>
-          <execution>
-            <id>install node and npm</id>
-            <goals>
-              <goal>install-node-and-npm</goal>
-            </goals>
-            <configuration>
-              <nodeVersion>v0.12.2</nodeVersion>
-              <npmVersion>2.9.1</npmVersion>
-            </configuration>
-          </execution>
-          <execution>
-            <id>npm install</id>
-            <goals>
-              <goal>npm</goal>
-            </goals>
-            <configuration>
-              <arguments>install</arguments>
-            </configuration>
-          </execution>
-          <execution>
-            <phase>generate-resources</phase>
-            <id>grunt build</id>
-            <goals>
-              <goal>grunt</goal>
-            </goals>
-            <configuration>
-              <arguments>maven-build-skip-tests-${skipWebTests}-${jsCoverage} --port=${jsTestPort} --no-color</arguments>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-war-plugin</artifactId>
         <configuration>

@@ -5,7 +5,11 @@ install: true
 jdk:
   - oraclejdk8
 
+before_script:
+  - cd server/sonar-web && npm install
+
 script:
+  - cd server/sonar-web && npm test && npm build
   - mvn verify -B -e -V
 
 cache:
