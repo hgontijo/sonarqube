@@ -8,8 +8,8 @@ install:
   - cd server/sonar-web && npm install && cd ../..
 
 script:
-  - cd server/sonar-web && npm test && cd ../..
-  - cd server/sonar-web && npm build && cd ../..
+  - cd server/sonar-web && npm run test && cd ../..
+  - cd server/sonar-web && npm run build && cd ../..
   - mvn verify -B -e -V
 
 cache:
