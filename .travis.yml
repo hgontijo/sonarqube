@@ -6,11 +6,10 @@ jdk:
   - oraclejdk8
 
 before_script:
-  - cd server/sonar-web && npm install
+  - cd server/sonar-web && npm install && cd ../..
 
 script:
-  - cd server/sonar-web && npm test && npm build
-  - mvn verify -B -e -V
+  - cd server/sonar-web && npm test && npm build && cd ../.. && mvn verify -B -e -V
 
 cache:
   directories:
