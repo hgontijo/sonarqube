@@ -24,7 +24,7 @@
 class DropTableGraphs < ActiveRecord::Migration
 
   def self.up
-    remove_index 'graphs', 'graphs_perspectives'
+    remove_index 'graphs', :name => 'graphs_perspectives'
     drop_table 'graphs'
   end
 
