@@ -55,7 +55,6 @@ import org.sonar.batch.issue.tracking.InitialOpenIssuesStack;
 import org.sonar.batch.issue.tracking.LocalIssueTracking;
 import org.sonar.batch.issue.tracking.ServerIssueRepository;
 import org.sonar.batch.mediumtest.ScanTaskObservers;
-import org.sonar.batch.phases.GraphPersister;
 import org.sonar.batch.phases.PhasesTimeProfiler;
 import org.sonar.batch.profiling.PhasesSumUpTimeProfiler;
 import org.sonar.batch.qualitygate.QualityGateProvider;
@@ -226,7 +225,6 @@ public class ProjectScanContainer extends ComponentContainer {
     add(
       PastMeasuresLoader.class,
       ResourcePersister.class,
-      GraphPersister.class,
 
       // Users
       DefaultUserFinder.class,
